@@ -27,34 +27,13 @@ manipulation and validation of NineML models, as well as handling their
 serialisation to and from XML_, JSON_, YAML_, and HDF5_.
 
 
-Installation
-------------
+Links
+-----
 
-HDF5 (dev)
-~~~~~~~~~~
+* Documentation: http://nineml-python.readthedocs.org
+* Mailing list: `NeuralEnsemble Google Group`_
+* Issue tracker: https://github.com/INCF/nineml-python/issues
 
-To add support to read or write HDF5_ serialisations you must first install a
-HDF5_ dev library (i.e. with headers).
-
-On macOS HDF5_ can be installed using Homebrew_
-
-    $ brew install hdf5
-
-On Ubuntu/Debian HDF5_ can be installed via the following packages:
-
-* libhdf5-serial-dev (serial)
-* libhdf5-openmpi-dev (parallel with Open MPI)
-* libhdf5-mpich-dev (parallel with MPICH)
-
-.. note: If you don't install a HDF5_ other serialisations can
-         still be used but you will need to install the package manually.
-
-Pip
-~~~
-
-The NineML Python Library can be installed using ``pip``
-
-    $ pip install nineml
 
 
 Relation to the NineML Specification
@@ -70,12 +49,12 @@ renaming of ``ComponentClass`` elements to separate ``Dynamics``,
 (see https://github.com/INCF/nineml/issues/94).
 A full list of changes planned for NineML v2.0 can be found at
 https://github.com/INCF/nineml/milestone/3. When serializing 9ML models
-the version 1.0 syntax is used unless the ``version=2.0`` keyword argument is
-used.
+the version 1.0 syntax is used unless the ``version=2`` keyword argument is
+provided.
 
 In addition to classes that directly correspond to the 9ML object model, a
 range of shorthand notations ("syntactic sugar") exist to make writing 9ML
-models by hand more convenient (see the *nineml.sugar* module). These notations
+models by hand more convenient (see the ``nineml.sugar`` module). These notations
 are frequently demonstrated in the *examples* directory of the repository.
 
 
@@ -88,17 +67,39 @@ model that you believe will be of wider use to the computational neuroscience
 community please consider contributing to the catalog via a pull request.
 
 
-Links
------
+Installation
+------------
 
-* Documentation: http://nineml-python.readthedocs.org
-* Mailing list: `NeuralEnsemble Google Group`_
-* Issue tracker: https://github.com/INCF/nineml-python/issues
+HDF5 (dev)
+~~~~~~~~~~
 
+To add support to read or write HDF5_ serialisations you must first install a
+HDF5_ dev library (i.e. with headers).
+
+On macOS HDF5_ can be installed using Homebrew_::
+
+    $ brew install hdf5
+
+On Ubuntu/Debian HDF5_ can be installed via the following packages:
+
+* libhdf5-serial-dev (serial)
+* libhdf5-openmpi-dev (parallel with Open MPI)
+* libhdf5-mpich-dev (parallel with MPICH)
+
+.. note: If you don't install a HDF5_ other serialisations can
+         still be used but you will need to install the package manually.
+
+Pip
+~~~
+
+The NineML Python Library can be installed using ``pip``::
+
+    $ pip install nineml
 
 :copyright: Copyright 20011-2017 by the NineML Python Library team, see AUTHORS.
 :license: BSD 3, see LICENSE for details.
-  
+
+ 
 .. _HDF5: http://support.hdfgroup.org/HDF5/
 .. _YAML: http://yaml.org
 .. _JSON: http://www.json.org
