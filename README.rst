@@ -93,7 +93,7 @@ Links
 -----
 
 * Documentation: http://nineml-python.readthedocs.org
-* Mailing list: nineml-users@incf.org
+* Mailing list: `NeuralEnsemble Google Group`_
 * Issue tracker: https://github.com/INCF/nineml-python/issues
 
 
@@ -111,5 +111,5 @@ Links
 .. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
 .. _Homebrew: https://brew.sh/
 .. _NineML specification: http://nineml-spec.readthedocs.io
-
+.. _`NeuralEnsemble Google Group`: http://groups.google.com/group/neuralensemble
  
