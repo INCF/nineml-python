@@ -30,17 +30,17 @@ serialisation to and from XML_, JSON_, YAML_, and HDF5_.
 Installation
 ------------
 
-HDF5
-~~~~
+HDF5 (dev)
+~~~~~~~~~~
 
-To add support to read or write HDF5_ serialisations you must first install the
-HDF5_ library.
+To add support to read or write HDF5_ serialisations you must first install a
+HDF5_ dev library (i.e. with headers).
 
-On macOS it can be installed using Homebrew_
+On macOS HDF5_ can be installed using Homebrew_
 
     $ brew install hdf5
 
-On Ubuntu/Debian it can be installed via the following packages:
+On Ubuntu/Debian HDF5_ can be installed via the following packages:
 
 * libhdf5-serial-dev (serial)
 * libhdf5-openmpi-dev (parallel with Open MPI)
@@ -79,8 +79,8 @@ models by hand more convenient (see the *nineml.sugar* module). These notations
 are frequently demonstrated in the *examples* directory of the repository.
 
 
-NineML Catalog
---------------
+The NineML Catalog
+------------------
 
 The `NineML Catalog`_ contains a collection of validated NineML models, which
 can be loaded and maninpulated with the NineML Python Library. If you create a
