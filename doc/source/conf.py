@@ -51,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 title = project = u'NineML Python library'
-authors = 'Mike Hull, Eilif Muller, Andrew Davison and Tom Close'
+authors = 'Andrew P. Davison Thomas G. Close, Mike Hull, and Eilif Muller, '
 copyright = u'2011-2017, ' + authors
 base_filename = u'NineMLPythonAPI'
 

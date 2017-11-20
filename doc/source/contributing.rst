@@ -59,10 +59,6 @@ and then you can pull in any upstream changes::
 
 We suggest developing in a virtualenv_, and installing :mod:`nineml` using::
 
-    $ python setup.py develop
-
-or::
-
     $ pip install -e .
 
 
@@ -88,7 +84,7 @@ optionally the *coverage_* package. To run the entire test suite, in the
 
 To see how well the codebase is covered by the tests, run::
 
-    $ nosetests --with-coverage --cover-package=nineml --cover-erase --cover-html unit
+    $ nosetests --with-coverage --cover-package=nineml --cover-erase --cover-html test/unittests
 
 If you add a new feature to :mod:`nineml`, or fix a bug, you should write a
 unit test to cover the situation it arose.

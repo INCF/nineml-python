@@ -2,9 +2,8 @@
 Getting help
 ============
 
-Mailing list: nineml-users@incf.org
-
-`NeuralEnsemble Google group`_
+For help using the NineML Python Library please use the
+`NeuralEnsemble Google group`_.
 
 If you find a bug or would like to add a new feature to the Python
 :mod:`nineml` package, please go to

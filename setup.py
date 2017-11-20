@@ -15,7 +15,7 @@ setup(
     long_description=open("README.rst").read(),
     license="BSD 3 License",
     keywords="computational neuroscience modeling interoperability XML",
-    url="http://nineml.net",
+    url="http://nineml-python.readthedocs.io",
     classifiers=['Development Status :: 4 - Beta',
                  'Environment :: Console',
                  'Intended Audience :: Science/Research',
