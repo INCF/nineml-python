@@ -82,11 +82,10 @@ are frequently demonstrated in the *examples* directory of the repository.
 NineML Catalog
 --------------
 
-The NineML Catalog (http://github.com/INCF/NineMLCatalog) contains a collection
-of validated NineML models that can be loaded and maninpulated with
-the NineML Python Library. If you create a model that you believe will be of
-wider use to the computational neuroscience community please consider
-contributing to the catalog via a pull request.
+The `NineML Catalog`_ contains a collection of validated NineML models, which
+can be loaded and maninpulated with the NineML Python Library. If you create a
+model that you believe will be of wider use to the computational neuroscience
+community please consider contributing to the catalog via a pull request.
 
 
 Links
@@ -97,7 +96,7 @@ Links
 * Issue tracker: https://github.com/INCF/nineml-python/issues
 
 
-:copyright: Copyright 20011-2017 by The NineML Python Library team, see AUTHORS.
+:copyright: Copyright 20011-2017 by the NineML Python Library team, see AUTHORS.
 :license: BSD 3, see LICENSE for details.
   
 .. _HDF5: http://support.hdfgroup.org/HDF5/
@@ -112,4 +111,5 @@ Links
 .. _Homebrew: https://brew.sh/
 .. _NineML specification: http://nineml-spec.readthedocs.io
 .. _`NeuralEnsemble Google Group`: http://groups.google.com/group/neuralensemble
+.. _`NineML Catalog`: http://github.com/INCF/nineml-catalog
  
