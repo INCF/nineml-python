@@ -2,7 +2,7 @@
 Getting help
 ============
 
-For help using the NineML Python Library please use the
+For help using the NineML Python Library please contact the
 `NeuralEnsemble Google group`_.
 
 If you find a bug or would like to add a new feature to the Python

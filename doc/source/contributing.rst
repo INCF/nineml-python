@@ -6,8 +6,7 @@ Mailing list
 ============
 
 Discussions about Python :mod:`nineml` take place in the
-`NeuralEnsemble Google Group`_ and on the nineml-developers@incf.org mailing
-list.
+`NeuralEnsemble Google Group`_.
 
 
 Setting up a development environment
