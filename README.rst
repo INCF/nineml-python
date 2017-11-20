@@ -42,9 +42,9 @@ On macOS it can be installed using Homebrew_
 
 On Ubuntu/Debian it can be installed via the following packages:
 
-    * libhdf5-serial-dev (serial)
-    * libhdf5-openmpi-dev (parallel with Open MPI)
-    * libhdf5-mpich-dev (parallel with MPICH)
+* libhdf5-serial-dev (serial)
+* libhdf5-openmpi-dev (parallel with Open MPI)
+* libhdf5-mpich-dev (parallel with MPICH)
 
 .. note: If you don't install a HDF5_ other serialisations can
          still be used but you will need to install the package manually.
