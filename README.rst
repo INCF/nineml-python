@@ -61,7 +61,7 @@ Relation to the NineML Specification
 ------------------------------------
 
 The layout of the Python modules and classes in the NineML Python Library
-relates closely to the structure of the `NineML specification v1.0`_. However,
+relates closely to the structure of the `NineML specification`_ v1.0. However,
 there are notable exceptions where the NineML Python Library uses names and
 relationships that are planned to be changed in v2.0 of the specification
 (the NineML Python Library will be backwards compatible), such as the
