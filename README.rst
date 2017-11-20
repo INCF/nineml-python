@@ -18,9 +18,8 @@ NineML Python Library
    :alt: Documentation Status
 
 NineML (9ML) is a language for describing the dynamics and connectivity of
-neuronal network simulations (http://nineml.net). The language is defined as an
-object model, described in the NineML specification
-(http://nineml.net/specification).
+neuronal network simulations (http://nineml.net), which is defined by the
+`NineML specification`_.
 
 The NineML Python Library is a software package written in Python, which maps
 the NineML object model onto Python classes for convenient creation,
