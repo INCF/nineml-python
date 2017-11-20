@@ -97,7 +97,7 @@ Links
 * Issue tracker: https://github.com/INCF/nineml-python/issues
 
 
-:copyright: Copyright 20011-2017 by the nineml-python team, see AUTHORS.
+:copyright: Copyright 20011-2017 by The NineML Python Library team, see AUTHORS.
 :license: BSD 3, see LICENSE for details.
   
 .. _HDF5: http://support.hdfgroup.org/HDF5/
