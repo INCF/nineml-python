@@ -8,14 +8,15 @@ setup(
     packages=find_packages(),
     # add your name here if you contribute to the code
     author="Andrew P. Davison, Thomas G. Close, Mike Hull, Eilif Muller",
-    author_email="nineml-users@incf.org",
+    author_email="tom.g.close@gmail.com",
     description=(
         "A tool for reading, writing and generally working with 9ML objects "
         "and files."),
     long_description=open("README.rst").read(),
     license="BSD 3 License",
-    keywords="computational neuroscience modeling interoperability XML",
-    url="http://nineml.net",
+    keywords=("computational neuroscience modeling interoperability XML YAML"
+              "HDF5 JSON"),
+    url="http://nineml-python.readthedocs.io",
     classifiers=['Development Status :: 4 - Beta',
                  'Environment :: Console',
                  'Intended Audience :: Science/Research',
@@ -34,5 +35,6 @@ setup(
                       'h5py>=2.7.0',
                       'pyyaml>=3.1',
                       'sympy>=1.1'],
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
     tests_require=['nose', 'numpy']
 )

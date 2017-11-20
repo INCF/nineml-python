@@ -10,7 +10,7 @@ addons:
     packages:
     - libhdf5-serial-dev 
 install:
-  - pip install -r requirements.txt
+  - pip install .
   - pip install coveralls
   - pip install numpy
 script:

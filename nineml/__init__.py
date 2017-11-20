@@ -5,7 +5,7 @@ A Python library for working with 9ML model descriptions.
 :license: BSD-3, see LICENSE for details.
 """
 
-__version__ = "0.2dev"
+__version__ = "1.0rc1"
 
 from . import annotations  # @IgnorePep8
 from . import units  # @IgnorePep8

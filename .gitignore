@@ -1,6 +1,5 @@
 .DS_Store
 *.pyc
-x86_64
 *.toc
 *.aux
 *.log
@@ -8,7 +7,6 @@ x86_64
 *.bbl
 *.blg
 *.out
-*.pdf
 *.komodoproject
 .idea
 *.synctex.gz*
@@ -17,14 +15,8 @@ cover
 *.project
 *.pydevproject
 *.settings
-/examples/Brunel2000/nineml_mechanisms/
-*.pdf
-*.synctex.gz
-.9build
-.swp
 *~
 *.egg-info
-*.dvi
 *#
 /MANIFEST
 /dist
@@ -34,3 +26,4 @@ cover
 *.bak
 __pycache__
 *.swp
+/build/
