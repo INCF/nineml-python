@@ -35,12 +35,11 @@ Links
 * Issue tracker: https://github.com/INCF/nineml-python/issues
 
 
-
 Relation to the NineML Specification
 ------------------------------------
 
 The layout of the Python modules and classes in the NineML Python Library
-relates closely to the structure of the `NineML specification`_ v1.0. However,
+relates closely to the structure of the `NineML specification`_ (v1.0). However,
 there are notable exceptions where the NineML Python Library uses names and
 relationships that are planned to be changed in v2.0 of the specification
 (the NineML Python Library will be backwards compatible), such as the
@@ -54,8 +53,9 @@ provided.
 
 In addition to classes that directly correspond to the 9ML object model, a
 range of shorthand notations ("syntactic sugar") exist to make writing 9ML
-models by hand more convenient (see the ``nineml.sugar`` module). These notations
-are frequently demonstrated in the *examples* directory of the repository.
+models by hand more convenient (see the ``nineml.sugar`` module). These
+notations are frequently demonstrated in the *examples* directory of the
+repository.
 
 
 The NineML Catalog
@@ -73,26 +73,26 @@ Installation
 HDF5 (dev)
 ~~~~~~~~~~
 
-To add support to read or write HDF5_ serialisations you must first install a
-HDF5_ dev library (i.e. with headers).
+To add support to read or write HDF5_ serialisations you must first install
+a HDF5_ dev library (i.e. with the C headers). 
 
 On macOS HDF5_ can be installed using Homebrew_::
 
     $ brew install hdf5
 
-On Ubuntu/Debian HDF5_ can be installed via the following packages:
+On Ubuntu/Debian HDF5_ can be installed by one of the following packages:
 
 * libhdf5-serial-dev (serial)
 * libhdf5-openmpi-dev (parallel with Open MPI)
 * libhdf5-mpich-dev (parallel with MPICH)
 
-.. note: If you don't install a HDF5_ other serialisations can
-         still be used but you will need to install the package manually.
+If you don't install HDF5_ the other serialisation formats can still be used
+but you will need to install the package manually (i.e. not use *pip*).
 
 Pip
 ~~~
 
-The NineML Python Library can be installed using ``pip``::
+The NineML Python Library can be installed using *pip*::
 
     $ pip install nineml
 

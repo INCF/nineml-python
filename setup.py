@@ -1,10 +1,20 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
+import os
+import sys
+
+PACKAGE_NAME = 'nineml'
+
+# Get version number
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), PACKAGE_NAME))
+from version import __version__  # @IgnorePep8 @UnresolvedImport
+sys.path.pop(0)
+
 
 setup(
-    name="nineml",
-    version="1.0rc2",
+    name=PACKAGE_NAME,
+    version=__version__,
     packages=find_packages(),
     # add your name here if you contribute to the code
     author="Andrew P. Davison, Thomas G. Close, Mike Hull, Eilif Muller",
@@ -17,7 +27,7 @@ setup(
     keywords=("computational neuroscience modeling interoperability XML YAML"
               "HDF5 JSON"),
     url="http://nineml-python.readthedocs.io",
-    classifiers=['Development Status :: 4 - Beta',
+    classifiers=['Development Status :: 5 - Production/Stable',
                  'Environment :: Console',
                  'Intended Audience :: Science/Research',
                  'License :: OSI Approved :: BSD License',
