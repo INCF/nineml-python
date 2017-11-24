@@ -10,9 +10,8 @@ addons:
     packages:
     - libhdf5-serial-dev 
 install:
-  - pip install .
-  - pip install coveralls
-  - pip install numpy
+  - pip install -e .[hdf5]
+  - pip install numpy coveralls
 script:
   nosetests test/unittests --with-coverage --cover-package=nineml
 after_success:
