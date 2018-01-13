@@ -288,7 +288,7 @@ class DimensionalityComponentValidator(BaseVisitorWithContext):
             for arg in expr.args:
                 dims = self._flatten_dims(arg, element)
                 # boolean expression == 0
-                if dims != 0 and dims != 1:  # FIXME: allow dimless until bool params @IgnorePep8
+                if dims != 0 and dims != 1:
                     raise NineMLDimensionError(self._construct_error_message(
                         "Logical expression provided non-boolean argument '{}'"
                         .format(arg), dims, expr))

@@ -16,6 +16,9 @@ from ....componentclass.visitors.validators import (
     DimensionalityComponentValidator)
 from ..base import BaseDynamicsVisitor
 import nineml.units as un
+import logging
+
+logger = logging.getLogger('NineML')
 
 
 class TimeDerivativesAreDeclaredDynamicsValidator(BaseDynamicsVisitor):
@@ -119,10 +122,10 @@ class RegimeGraphDynamicsValidator(BaseDynamicsVisitor):
             # Recursively add all regimes connected to the first regime
             self._add_connected_regimes_recursive(first_regime)
             if len(self.connected) < len(self.regimes):
-                # FIXME: This should probably be a warning not an error
-                raise NineMLUsageError(
-                    "Transition graph of {} contains islands: {} regimes "
-                    "('{}') and {} connected ('{}'):\n\n{}".format(
+                logger.warning(
+                    "Transition graph of {} contains islands: {} "
+                    "regimes ('{}') and {} connected ('{}'):\n\n{}"
+                    .format(
                         component_class,
                         len(self.regimes),
                         "', '".join(r.name for r in self.regimes),

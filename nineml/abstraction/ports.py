@@ -115,7 +115,7 @@ class SendPort(SendPortBase):
 
     Base class for sending ports
     """
-    mode = "send"  # FIXME: This is here for legacy unittest I think (TGC 1/15)
+    mode = "send"
 
     def is_incoming(self):
         return False
@@ -129,7 +129,7 @@ class ReceivePort(object):
 
     Base class for receiving ports
     """
-    mode = "recv"  # FIXME: This is here for legacy unittest I think (TGC 1/15)
+    mode = "receive"
 
     def is_incoming(self):
         return True
