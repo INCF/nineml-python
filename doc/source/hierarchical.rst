@@ -12,13 +12,13 @@ connectivity.
 
 Building larger components out of smaller components has several advantages:
     
-    * We can define components in a reusable way. I.e., we can write the IAF
+    * We can define components in a reusable way; i.e., we can write the IAF
         subcomponent once, then reuse it across multiple components.
     * We can isolated unrelated variables; reducing the chance of a typo
         producing a bug or variable collisions.
 
-We look at the IAF with two synapse example in more detail. The following
-figure shows a cartoon of an iaf neuron with a refractory period. Orange boxes
+We look at the IAF-with-two-synapses example in more detail. The following
+figure shows a cartoon of an IAF neuron with a refractory period. Orange boxes
 denote regimes, yellow ovals denote transitions and the ports are shown on the
 right-hand-side. Parameters have been omitted.
 

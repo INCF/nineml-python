@@ -11,7 +11,7 @@ There is a near one-to-one mapping between NineML types as defined in the
 The most significant exceptions are classes in the ``nineml`` package that are
 modelled on proposed changes to the `NineML specification`_
 (see http://github.com/INCF/nineml-spec/issues), e.g.
-ComponentClass->:ref:`Dynamics`/:ref:`ConnectionRule`, :ref:`Projection`,
+ComponentClass -> :ref:`Dynamics`/:ref:`ConnectionRule`, :ref:`Projection`,
 :ref:`Quantity`.
 
 There are also cases where a type in the specification is just a thin wrapper
@@ -62,7 +62,7 @@ There are 12 types that are permitted in the root of a NineML document
  * Unit
  * Dimension
 
-Instances of these types has a ``document`` property to access the document it
+Each instance of these types has a ``document`` property to access the document it
 belongs to and a ``url`` property to access the url of the document. If the
 instance has not been added to a document then they will return ``None``.
 

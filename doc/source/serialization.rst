@@ -37,9 +37,9 @@ Formats
 There are currently five supported formats for serialization with the NineML
 Python library: XML_, YAML_, JSON_, HDF5_, and Python
 dictionary (the JSON_ and YAML_ formats are derived from the
-Python dictionary serializer). Noting that the serialization module is written
-in a modular way that can support additional hierarchical formats if required
-by deriving the ``BaseSerializer`` and ``BaseUnserializer`` classes.
+Python dictionary serializer). Note that the serialization module is written
+in a modular way that can support additional hierarchical formats, if required,
+by sub-classing the ``BaseSerializer`` and ``BaseUnserializer`` classes.
 
 Depending on the format used, NineML can be serialized to file, string or
 standard Python objects (i.e dictionary).
@@ -70,7 +70,7 @@ Versions
 --------
 
 The NineML Python Library is fully interoperable with the NineML v1
-syntax the v2 syntax currently under development. While this
+syntax and the v2 syntax currently under development. While this
 will not be feasible as non-compatible features are added to v2, the aim is to
 maintain full backwards compatibility with v1.
 

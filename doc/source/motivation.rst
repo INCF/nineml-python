@@ -24,7 +24,7 @@ neuron/synapse models defined in NineML_, for certain simulators), (ii) being ti
 language. Having access to a full programming language is also a temptation to writing over-complex,
 difficult to maintain model descriptions when compared to a declarative language such as NineML_.
 
-NineML_ tries to mitigate some of these problems by providing an language for
+NineML_ tries to mitigate some of these problems by providing a language for
 defining smaller components of a simulation in a declarative, language-independent way.
 Various tools are then available for generating code for various simulators from this description
 (see http://nineml.net/software).

@@ -150,7 +150,7 @@ The trigger for this transition is for the variable ``V`` to pass a threshold (p
     >>> tr_spike.trigger
     Trigger('V > theta')
 
-When the transition is initiated, the model will emit an output event (i.e. a spike) and discontinusouly change
+When the transition is initiated, the model will emit an output event (i.e. a spike) and discontinuously change
 the values of some of the state variables:
 
 .. code-block:: python

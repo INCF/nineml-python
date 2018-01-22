@@ -7,8 +7,8 @@ with the ``sympy`` package installed. To serialize NineML_ to XML, YAML and
 HDF5 formats the ``lxml``, ``pyyaml`` and ``h5py`` packages are also required
 respectively.
 
-Depdendencies
--------------
+Dependencies
+------------
 
 macOS
 ~~~~~
