@@ -69,14 +69,13 @@ We follow the PEP8_ coding style. Please note in particular:
     - indentation of four spaces, no tabs
     - single space around most operators, but no space around the '=' sign when
       used to indicate a keyword argument or a default parameter value.
-    - we currently only Python version 2.7 but Python 3 support is planned.
 
 
 Testing
 =======
 
-Running the PyNN test suite requires the *nose_* packages, and
-optionally the *coverage_* package. To run the entire test suite, in the
+Running the PyNN test suite requires the nose_ package, and
+optionally the coverage_ package. To run the entire test suite, in the
 ``lib9ml/python/test`` subdirectory of the source tree::
 
     $ nosetests unit
@@ -132,7 +131,7 @@ tested by running::
 
     $ make doctest
 
-NineML documentation is hosted at http://readthedocs.org/nineml
+Python NineML documentation is hosted at http://nineml-python.readthedocs.io/
 
 
 Making a release

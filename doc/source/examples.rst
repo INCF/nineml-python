@@ -14,7 +14,7 @@ Example - Hodgkin-Huxley
 
 Example - Leaky Integrate and Fire
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. literalinclude:: /../../nineml/examples/AL/sample_components/iaf_sfa_relref.py
+.. literalinclude:: /../../examples/neuron/leaky_integrate_and_fire.py
 
 Example - Izhikevich
 ~~~~~~~~~~~~~~~~~~~~
@@ -26,7 +26,7 @@ Post-synaptic Response Models
 
 Example - Alpha
 ~~~~~~~~~~~~~~~
-.. literalinclude:: /../../examples/postsynapticresponses/alpha.py
+.. literalinclude:: /../../examples/postsynapticresponse/alpha.py
 
 
 Plasticity Models
