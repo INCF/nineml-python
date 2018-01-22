@@ -78,7 +78,8 @@ class DimensionedPort(
 
     def __init__(self, name, dimension=None):
         super(DimensionedPort, self).__init__(name)
-        self._dimension = dimension if dimension is not None else dimensionless # TODO: This needs checking @IgnorePep8
+        self._dimension = (dimension if dimension is not None
+                           else dimensionless)
 
     @property
     def dimension(self):

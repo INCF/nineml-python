@@ -168,10 +168,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 
         # Set and check event send ports match inferred
         if self.num_event_send_ports:
-            # FIXME: not all OutputEvents are necessarily exposed as Ports,
-            # so really we should just check that all declared output event
-            # ports are in the list of inferred ports, not that the declared
-            # list is identical to the inferred one.
             check_inferred_against_declared(
                 self.event_send_port_names,
                 inferred_struct.event_out_port_names,
