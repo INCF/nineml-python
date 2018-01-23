@@ -22,7 +22,7 @@ from nineml.exceptions import NineMLUsageError
 
 builtin_constants = set(['true', 'false', 'True', 'False'])
 builtin_functions = set([
-    'exp', 'sin', 'cos', 'log', 'log10', 'pow', 'abs',
+    'exp', 'sin', 'cos', 'tan', 'log', 'log10', 'pow', 'abs',
     'sinh', 'cosh', 'tanh', 'sqrt', 'mod',  # 'sum',
     'atan', 'asin', 'acos', 'asinh', 'acosh', 'atanh', 'atan2'])
 reserved_symbols = set(['t'])

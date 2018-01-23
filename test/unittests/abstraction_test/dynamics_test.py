@@ -163,7 +163,7 @@ class ComponentClass_test(unittest.TestCase):
 
         c = Dynamics(name='C1', analog_ports=[AnalogReceivePort('B')])
         self.assertEqual(len(list(c.analog_ports)), 1)
-        self.assertEqual(list(c.analog_ports)[0].mode, 'recv')
+        self.assertEqual(list(c.analog_ports)[0].mode, 'receive')
         self.assertEqual(len(list(c.analog_send_ports)), 0)
         self.assertEqual(len(list(c.analog_receive_ports)), 1)
         self.assertEqual(len(list(c.analog_reduce_ports)), 0)

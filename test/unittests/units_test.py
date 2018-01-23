@@ -34,8 +34,7 @@ class TestUnitsDimensions(unittest.TestCase):
                 self.assertEqual(getattr(dim, abbrev), dim._dims[i])
                 self.assertEqual(getattr(dim, name), dim._dims[i])
 
-# FIXME: Currently the 'scale' attribute isn't supported, need to work out
-#        whether we want to do this or not.
+
 units_xml_str = """<?xml version="1.0" encoding="UTF-8"?>
 <NineML xmlns="http://nineml.net/9ML/2.0">
   <Annotations>
@@ -74,11 +73,6 @@ units_xml_str = """<?xml version="1.0" encoding="UTF-8"?>
   <Unit symbol="Hz" dimension="per_time" power="0"/>
   <Unit symbol="ms" dimension="time" power="-3"/>
   <Unit symbol="per_ms" dimension="per_time" power="3"/>
-  <!--<Unit symbol="min" dimension="time" power="0" scale="60"/>
-  <Unit symbol="per_min" dimension="per_time" power="0" scale="0.01666666667"/>
-  <Unit symbol="hour" dimension="time" power="0" scale="3600"/>
-  <Unit symbol="per_hour" dimension="per_time" power="0"
-    scale="0.00027777777778"/>-->
   <Unit symbol="m" dimension="length" power="0"/>
   <Unit symbol="cm" dimension="length" power="-2"/>
   <Unit symbol="um" dimension="length" power="-6"/>

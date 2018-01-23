@@ -8,3 +8,4 @@ All released NineML Python versions:
    :maxdepth: 1
 
    1.0rc1
+   1.0

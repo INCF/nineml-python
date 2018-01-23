@@ -78,7 +78,8 @@ class DimensionedPort(
 
     def __init__(self, name, dimension=None):
         super(DimensionedPort, self).__init__(name)
-        self._dimension = dimension if dimension is not None else dimensionless # TODO: This needs checking @IgnorePep8
+        self._dimension = (dimension if dimension is not None
+                           else dimensionless)
 
     @property
     def dimension(self):
@@ -115,7 +116,7 @@ class SendPort(SendPortBase):
 
     Base class for sending ports
     """
-    mode = "send"  # FIXME: This is here for legacy unittest I think (TGC 1/15)
+    mode = "send"
 
     def is_incoming(self):
         return False
@@ -129,7 +130,7 @@ class ReceivePort(object):
 
     Base class for receiving ports
     """
-    mode = "recv"  # FIXME: This is here for legacy unittest I think (TGC 1/15)
+    mode = "receive"
 
     def is_incoming(self):
         return True
