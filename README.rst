@@ -70,8 +70,12 @@ community please consider contributing to the catalog via a pull request.
 Installation
 ------------
 
-HDF5 (dev)
-~~~~~~~~~~
+The NineML Python Library can be installed using *pip*::
+
+    $ pip install nineml
+
+HDF5 Support
+~~~~~~~~~~~~
 
 To add support to read or write HDF5_ serialisations you must first install
 a HDF5_ dev library (i.e. with the C headers). 
@@ -86,15 +90,9 @@ On Ubuntu/Debian HDF5_ can be installed by one of the following packages:
 * libhdf5-openmpi-dev (parallel with Open MPI)
 * libhdf5-mpich-dev (parallel with MPICH)
 
-If you don't install HDF5_ the other serialisation formats can still be used
-but you will need to install the package manually (i.e. not use *pip*).
+Then to install *pype9* with support for HDF5_ select the 'hdf5' extra::
 
-Pip
-~~~
-
-The NineML Python Library can be installed using *pip*::
-
-    $ pip install nineml
+    $ pip install nineml[hdf5]
 
 :copyright: Copyright 20011-2017 by the NineML Python Library team, see AUTHORS.
 :license: BSD 3, see LICENSE for details.

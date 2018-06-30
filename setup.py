@@ -43,9 +43,10 @@ setup(
                  'Topic :: Scientific/Engineering'],
     install_requires=['lxml>=3.7.3',
                       'future>=0.16.0',
-                      'h5py>=2.7.0',
                       'PyYAML>=3.1',
                       'sympy>=1.1'],
+    extras_require={
+        'hdf5': 'h5py>=2.7.0'},
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4',
     tests_require=['nose', 'numpy']
 )
