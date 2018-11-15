@@ -2,7 +2,7 @@ NineML Python Library
 =====================
 
 .. image:: https://travis-ci.org/INCF/nineml-python.svg?branch=master
-   :target: https://travis-ci.org/ICNF/nineml-python
+   :target: https://travis-ci.org/INCF/nineml-python
    :alt: Unit Test Status
 .. image:: https://coveralls.io/repos/github/INCF/nineml-python/badge.svg?branch=master
    :target: https://coveralls.io/github/INCF/nineml-python?branch=master
