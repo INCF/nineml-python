@@ -8,7 +8,7 @@ from itertools import chain
 import sympy
 from sympy.parsing.sympy_parser import (
     parse_expr as sympy_parse, standard_transformations, convert_xor)
-from sympy.parsing.sympy_tokenize import NAME, OP
+from tokenize import NAME, OP
 import operator
 import re
 from nineml.exceptions import NineMLMathParseError
@@ -118,14 +118,10 @@ class Parser(object):
                 # Unescape relationals escaped in _parse_relationals
                 elif tokval.endswith('__'):
                     tokval = tokval[:-2]
-            # Handle multiple negations
-            elif toknum == OP and tokval.startswith('!'):
-                # NB: Multiple !'s are grouped into the one token
-                assert all(t == '!' for t in tokval)
-                if len(tokval) % 2:
-                    tokval = '~'  # odd number of negation symbols
-                else:
-                    continue  # even number of negation symbols, cancel out
+            # Handle C89 negations
+            elif tokval == '!':
+                toknum = OP
+                tokval = '~'
             result.append((toknum, tokval))
         new_result = []
         # Loop through pairwise combinations
