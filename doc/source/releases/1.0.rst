@@ -1,0 +1,11 @@
+=================
+:mod:`nineml` 1.0
+=================
+
+|date|
+
+The first public release of the Python :mod:`nineml` package,
+corresponding to the release of `NineML specification`_ v1.0.
+
+.. _`NineML specification`: http://nineml-spec.readthedocs.io/
+.. |date| date:: November 23rd 2017

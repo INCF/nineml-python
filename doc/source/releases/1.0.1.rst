@@ -1,0 +1,10 @@
+===================
+:mod:`nineml` 1.0.1
+===================
+
+|date|
+
+This bug-fix release updates the library to be able to use the latest versions
+of Sympy (>=1.2)
+
+.. |date| date:: November 16th 2018
