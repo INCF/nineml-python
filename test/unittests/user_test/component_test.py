@@ -25,7 +25,7 @@ from nineml import Unit, Dimension
 #             mismatch = document1.find_mismatch(document2)
 #         else:
 #             mismatch = ''
-#         self.assertEquals(document1, document2, mismatch)
+#         self.assertEqual(document1, document2, mismatch)
 # 
 #     def test_prototype_xml_540degree_roundtrip(self):
 #         test_file = os.path.join(examples_dir, 'HodgkinHuxleyModified.xml')
@@ -36,7 +36,7 @@ from nineml import Unit, Dimension
 #             mismatch = document1.find_mismatch(document2)
 #         else:
 #             mismatch = ''
-#         self.assertEquals(document1, document2, mismatch)
+#         self.assertEqual(document1, document2, mismatch)
 # 
 #     def test_mismatch_dimension(self):
 #         with self.assertRaises(NineMLUsageError):

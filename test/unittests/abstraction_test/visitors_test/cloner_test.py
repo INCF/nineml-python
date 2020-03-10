@@ -163,7 +163,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 #                   c3_clone, ]
 # 
 #         # Check for duplicates:
-#         self.assertEquals(len(clones), len(set(clones)))
+#         self.assertEqual(len(clones), len(set(clones)))
 # 
 #         # Names:
 #         self.assertEqual(b1_clone.name, 'B')
