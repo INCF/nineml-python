@@ -28,3 +28,4 @@ cover
 __pycache__
 *.swp
 /build/
+.pytest_cache
