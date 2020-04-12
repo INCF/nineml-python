@@ -202,8 +202,8 @@ class Expression(AnnotatedNineMLObject):
                             "Incorrect arguments provided to expression '{}'"
                             ": '{}' (expected '{}')\n".format(
                                 self.rhs,
-                                "', '".join(list(kwargs.keys())),
-                                "', '".join(self.rhs_symbol_names)))
+                                "', '".join(sorted(kwargs.keys())),
+                                "', '".join(sorted(self.rhs_symbol_names))))
                     try:
                         val = float(val)
                     except TypeError:
