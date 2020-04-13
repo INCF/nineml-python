@@ -185,25 +185,18 @@ class Expression(AnnotatedNineMLObject):
                                      BooleanFalse)):
                 val = self.rhs
             else:
-                if self.rhs.is_Boolean:
-                    try:
-                        val = self.rhs.subs(kwargs)
-                    except Exception:
-                        raise NineMLUsageError(
-                            "Incorrect arguments provided to expression ('{}')"
-                            ": '{}'\n".format(
-                                "', '".join(self.rhs_symbol_names),
-                                "', '".join(list(kwargs.keys()))))
+                provided = set(kwargs.keys())
+                expected = set(self.rhs_symbol_names)
+                if provided != expected:
+                    raise NineMLUsageError(
+                        "Incorrect arguments provided to expression '{}'"
+                        ": '{}' (expected '{}')\n".format(
+                            self.rhs, "', '".join(provided),
+                            "', '".join(expected)))
+                if self.rhs.is_Boolean or self.rhs.is_Relational:
+                    val = self.rhs.subs(kwargs)
                 else:
-                    try:
-                        val = self.rhs.evalf(subs=kwargs)
-                    except Exception:
-                        raise NineMLUsageError(
-                            "Incorrect arguments provided to expression '{}'"
-                            ": '{}' (expected '{}')\n".format(
-                                self.rhs,
-                                "', '".join(sorted(kwargs.keys())),
-                                "', '".join(sorted(self.rhs_symbol_names))))
+                    val = self.rhs.evalf(subs=kwargs)
                     try:
                         val = float(val)
                     except TypeError:
