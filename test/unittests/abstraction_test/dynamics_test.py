@@ -643,7 +643,7 @@ class OnCondition_test(unittest.TestCase):
                             'V < (V+10',
                             'V (< V+10)',
                             'V (< V+10)',
-                            '1 / ( 1 + mg_conc * eta *  exp (( -1 * gamma*V))'
+                            '1 / ( 1 + mg_conc * eta *  exp(-1 * gamma*V))'
                             '1..0'
                             '..0']
         for tr in invalid_triggers:

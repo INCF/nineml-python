@@ -86,14 +86,18 @@ class Parser(object):
         if self._logic_relation_re.search(expr):
             expr = self._parse_relationals(expr)
         self.escaped_names = set()
-        # try:
-        expr = sympy_parse(
-            expr, transformations=([self] + self._sympy_transforms),
-            local_dict=self.inline_randoms_dict)
-        # except Exception as e:
-        #     raise NineMLMathParseError(
-        #         "Could not parse math-inline expression: "
-        #         "{}\n\n{}".format(expr, e))
+        # This is a work around for a PY2 bug in Sympy where the inspect module
+        # can't get the argument spec of a Callable object (instead of a func.)
+        def parser(tokens, local_dict, global_dict):
+            return self(tokens, local_dict, global_dict)
+        try:
+            expr = sympy_parse(
+                expr, transformations=([parser] + self._sympy_transforms),
+                local_dict=self.inline_randoms_dict)
+        except Exception as e:
+            raise NineMLMathParseError(
+                "Could not parse math-inline expression: "
+                "{}\n\n{}".format(expr, e))
         return self._postprocess(expr)
 
     def _preprocess(self, tokens):
