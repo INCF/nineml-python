@@ -86,14 +86,14 @@ class Parser(object):
         if self._logic_relation_re.search(expr):
             expr = self._parse_relationals(expr)
         self.escaped_names = set()
-        try:
-            expr = sympy_parse(
-                expr, transformations=([self] + self._sympy_transforms),
-                local_dict=self.inline_randoms_dict)
-        except Exception as e:
-            raise NineMLMathParseError(
-                "Could not parse math-inline expression: "
-                "{}\n\n{}".format(expr, e))
+        # try:
+        expr = sympy_parse(
+            expr, transformations=([self] + self._sympy_transforms),
+            local_dict=self.inline_randoms_dict)
+        # except Exception as e:
+        #     raise NineMLMathParseError(
+        #         "Could not parse math-inline expression: "
+        #         "{}\n\n{}".format(expr, e))
         return self._postprocess(expr)
 
     def _preprocess(self, tokens):
