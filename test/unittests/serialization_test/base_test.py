@@ -357,5 +357,5 @@ class TestSerialization(unittest.TestCase):
 
 h_strs = {
     'xml': '<H xmlns="http://nineml.net/9ML/1.0"><G>1.0</G></H>',
-    'yaml': 'H: {G: 1.0}\n',
+    'yaml': 'H:\n  G: 1.0\n',
     'json': '{"H": {"G": 1.0}}'}

@@ -97,7 +97,7 @@ class TestProjection(unittest.TestCase):
                                         document=document)
         projection2 = Projection.unserialize(xml, format='xml', version=1,
                                              document=document)
-        self.assertEquals(self.projection, projection2,
+        self.assertEqual(self.projection, projection2,
                           "Projection failed XML roundtrip:\n{}"
                           .format(self.projection.find_mismatch(projection2)))
 

@@ -14,14 +14,14 @@ class TestUnitsDimensions(unittest.TestCase):
         document1 = XMLUnserializer(root=units_xml_str).unserialize()
         xml = document1.serialize()
         document2 = XMLUnserializer(xml).unserialize()
-        self.assertEquals(document1, document2)
+        self.assertEqual(document1, document2)
 
     def test_sympy(self):
         for dim in (un.temperature, un.capacitance, un.resistance, un.charge,
                     un.voltage, un.specificCapacitance):
             sympy_dim = sympify(dim)
             new_dim = un.Dimension.from_sympy(sympy_dim)
-            self.assertEquals(dim, new_dim,
+            self.assertEqual(dim, new_dim,
                               "Sympy roundtrip failed for {}".format(dim))
 
     def test_accessors(self):

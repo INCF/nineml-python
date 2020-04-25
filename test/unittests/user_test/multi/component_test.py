@@ -90,7 +90,7 @@ class MultiDynamicsXML_test(unittest.TestCase):
         comp2 = XMLUnserializer(root=xml).unserialize()['test']
         if comp1 != comp2:
             print(comp2.find_mismatch(comp1))
-        self.assertEquals(comp1, comp2)
+        self.assertEqual(comp1, comp2)
 
 
 class MultiDynamicsFlattening_test(unittest.TestCase):

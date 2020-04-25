@@ -13,6 +13,7 @@ import sympy
 from sympy.printing import ccode
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from sympy.functions.elementary.piecewise import ExprCondPair
+from sympy.utilities.lambdify import lambdify
 import re
 from nineml.utils import validate_identifier
 # import math_namespace
@@ -180,43 +181,7 @@ class Expression(AnnotatedNineMLObject):
     def rhs_as_python_func(self):
         """ Returns a python callable which evaluates the expression in
         namespace and returns the result """
-        def nineml_expression(**kwargs):
-            if isinstance(self.rhs, (bool, int, float, BooleanTrue,
-                                     BooleanFalse)):
-                val = self.rhs
-            else:
-                if self.rhs.is_Boolean:
-                    try:
-                        val = self.rhs.subs(kwargs)
-                    except Exception:
-                        raise NineMLUsageError(
-                            "Incorrect arguments provided to expression ('{}')"
-                            ": '{}'\n".format(
-                                "', '".join(self.rhs_symbol_names),
-                                "', '".join(list(kwargs.keys()))))
-                else:
-                    try:
-                        val = self.rhs.evalf(subs=kwargs)
-                    except Exception:
-                        raise NineMLUsageError(
-                            "Incorrect arguments provided to expression '{}'"
-                            ": '{}' (expected '{}')\n".format(
-                                self.rhs,
-                                "', '".join(list(kwargs.keys())),
-                                "', '".join(self.rhs_symbol_names)))
-                    try:
-                        val = float(val)
-                    except TypeError:
-                        try:
-                            locals_dict = deepcopy(kwargs)
-                            locals_dict.update(str_to_npfunc_map)
-                            val = eval(str(val), {}, locals_dict)
-                        except Exception:
-                            raise NineMLUsageError(
-                                "Could not evaluate expression: {}"
-                                .format(self.rhs_str))
-            return val
-        return nineml_expression
+        return lambdify(list(self.rhs_symbol_names), self.rhs, 'numpy')
 
     def rhs_suffixed(self, suffix='', prefix='', excludes=[]):
         """

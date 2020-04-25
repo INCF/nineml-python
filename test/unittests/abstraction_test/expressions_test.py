@@ -24,8 +24,8 @@ class Expression_test(unittest.TestCase):
 
         for rhs, exp_var, exp_func, exp_res, params in valid_rhses:
             e = Expression(rhs)
-            self.assertEquals(set(e.rhs_symbol_names), set(exp_var))
-            self.assertEquals(set(str(f) for f in e.rhs_funcs), set(exp_func))
+            self.assertEqual(set(e.rhs_symbol_names), set(exp_var))
+            self.assertEqual(set(str(f) for f in e.rhs_funcs), set(exp_func))
             self.assertAlmostEqual(e.rhs_as_python_func(**params), exp_res,
                                    places=4)
 
@@ -91,30 +91,30 @@ class Expression_test(unittest.TestCase):
 
         e = Expression("V*sin(V)/(eta*mg_conc*exp(-V^2*gamma) + 1)")
         e.rhs_name_transform_inplace({'V': 'VNEW'})
-        self.assertEquals(
+        self.assertEqual(
             e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW^2*gamma) + 1)")
 
         # Don't Change builtin function names:
         e.rhs_name_transform_inplace({'sin': 'SIN'})
-        self.assertEquals(
+        self.assertEqual(
             e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW^2*gamma) + 1)")
         e.rhs_name_transform_inplace({'exp': 'EXP'})
-        self.assertEquals(
+        self.assertEqual(
             e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW^2*gamma) + 1)")
 
         # Check the attributes:
-        self.assertEquals(set(e.rhs_atoms), set(
+        self.assertEqual(set(e.rhs_atoms), set(
             ['VNEW', 'mg_conc', 'eta', 'gamma', 'exp', 'sin']))
-        self.assertEquals(set(str(f) for f in e.rhs_funcs),
+        self.assertEqual(set(str(f) for f in e.rhs_funcs),
                           set(['exp', 'sin']))
 
     def test_escape_of_carets(self):
-        self.assertEquals(Expression("a^2").rhs_cstr, 'a*a')
-        self.assertEquals(Expression("(a - 2)^2").rhs_cstr,
+        self.assertEqual(Expression("a^2").rhs_cstr, 'a*a')
+        self.assertEqual(Expression("(a - 2)^2").rhs_cstr,
                           '(a - 2)*(a - 2)')
-        self.assertEquals(Expression("(a - (a - 2)^2.5)^2.5").rhs_cstr,
+        self.assertEqual(Expression("(a - (a - 2)^2.5)^2.5").rhs_cstr,
                           'pow(a - pow(a - 2, 2.5), 2.5)')
-        self.assertEquals(Expression("a^(a - 2)").rhs_cstr, 'pow(a, a - 2)')
+        self.assertEqual(Expression("a^(a - 2)").rhs_cstr, 'pow(a, a - 2)')
 
 
 class C89ToSympy_test(unittest.TestCase):
@@ -317,37 +317,37 @@ class TimeDerivative_test(unittest.TestCase):
     def test_atoms(self):
         td = TimeDerivative(variable='X',
                             rhs=' y * f - sin(q*q) + 4 * a * exp(Y)')
-        self.assertEquals(sorted(td.atoms), sorted(
+        self.assertEqual(sorted(td.atoms), sorted(
             ['X', 'y', 'f', 'sin', 'exp', 'q', 'a', 'Y', 't']))
-        self.assertEquals(sorted(td.lhs_atoms), sorted(['X', 't']))
-        self.assertEquals(sorted(td.rhs_atoms),
+        self.assertEqual(sorted(td.lhs_atoms), sorted(['X', 't']))
+        self.assertEqual(sorted(td.rhs_atoms),
                           sorted(['y', 'f', 'sin', 'exp', 'q', 'a', 'Y']))
 
 #   def test_dependent_variable(self):
     def test_independent_variable(self):
         td = TimeDerivative(variable='X',
                             rhs=' y*f - sin(q*q) + 4*a*exp(Y)')
-        self.assertEquals(td.independent_variable, 't')
-        self.assertEquals(td.variable, 'X')
+        self.assertEqual(td.independent_variable, 't')
+        self.assertEqual(td.variable, 'X')
 
         # Check substitutions to the LHS:
         td.lhs_name_transform_inplace({'X': 'x'})
-        self.assertEquals(td.variable, 'x')
+        self.assertEqual(td.variable, 'x')
 
         # Since this is always time, we should not be changing the
         # independent_variable (dt)
         td.lhs_name_transform_inplace({'t': 'T'})
-        self.assertEquals(td.independent_variable, 'T')
+        self.assertEqual(td.independent_variable, 'T')
 
         # Aand change them again using 'name_transform_inplace'
         # Check substitutions to the LHS:
         td.name_transform_inplace({'x': 'X1'})
-        self.assertEquals(td.variable, 'X1')
+        self.assertEqual(td.variable, 'X1')
 
         # Since this is always time, we should not be changing the
         # independent_variable (dt)
         td.lhs_name_transform_inplace({'T': 'time'})
-        self.assertEquals(td.independent_variable, 'time')
+        self.assertEqual(td.independent_variable, 'time')
 
 
 class MathUtils_test(unittest.TestCase):
@@ -478,6 +478,6 @@ class StrToExpr_test(unittest.TestCase):
         for expr_str, (exp_dep, exp_indep, exp_rhs) in TimeDerivatives:
             td = TimeDerivative.from_str(expr_str)
 
-            self.assertEquals(td.variable, exp_dep)
-            self.assertEquals(td.independent_variable, exp_indep)
-            self.assertEquals(str(td.rhs), str(exp_rhs))
+            self.assertEqual(td.variable, exp_dep)
+            self.assertEqual(td.independent_variable, exp_indep)
+            self.assertEqual(str(td.rhs), str(exp_rhs))

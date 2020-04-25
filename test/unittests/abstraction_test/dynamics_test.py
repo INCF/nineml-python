@@ -245,7 +245,7 @@ class ComponentClass_test(unittest.TestCase):
                 ]
             ),
         )
-        self.assertEquals(len(list(c.event_ports)), 2)
+        self.assertEqual(len(list(c.event_ports)), 2)
 
         # Check inference of output event ports:
         c = Dynamics(
@@ -262,7 +262,7 @@ class ComponentClass_test(unittest.TestCase):
                            On('V < b', do=OutputEvent('ev_port3'))])
             ]
         )
-        self.assertEquals(len(list(c.event_ports)), 3)
+        self.assertEqual(len(list(c.event_ports)), 3)
 
         # Check inference of output event ports:
         c = Dynamics(
@@ -281,7 +281,7 @@ class ComponentClass_test(unittest.TestCase):
                               to='r1')])
             ]
         )
-        self.assertEquals(len(list(c.event_ports)), 5)
+        self.assertEqual(len(list(c.event_ports)), 5)
 
     def test_parameters(self):
         # Signature: name
@@ -525,24 +525,24 @@ class ComponentClass_test(unittest.TestCase):
                                       transitions=On('X>X1', do=['X=X0'],
                                                      to=None))])
 
-        self.assertEquals(len(list(c.all_transitions())), 6)
+        self.assertEqual(len(list(c.all_transitions())), 6)
 
         r1 = c.regime('r1')
         r2 = c.regime('r2')
         r3 = c.regime('r3')
         r4 = c.regime('r4')
 
-        self.assertEquals(len(list(r1.transitions)), 2)
-        self.assertEquals(len(list(r2.transitions)), 1)
-        self.assertEquals(len(list(r3.transitions)), 2)
-        self.assertEquals(len(list(r4.transitions)), 1)
+        self.assertEqual(len(list(r1.transitions)), 2)
+        self.assertEqual(len(list(r2.transitions)), 1)
+        self.assertEqual(len(list(r3.transitions)), 2)
+        self.assertEqual(len(list(r4.transitions)), 1)
 
         def target_regimes(regime):
             return unique_by_id(t.target_regime for t in regime.transitions)
-        self.assertEquals(target_regimes(r1), [r2, r3])
-        self.assertEquals(target_regimes(r2), [r3])
-        self.assertEquals(target_regimes(r3), [r3, r4])
-        self.assertEquals(target_regimes(r4), [r4])
+        self.assertEqual(target_regimes(r1), [r2, r3])
+        self.assertEqual(target_regimes(r2), [r3])
+        self.assertEqual(target_regimes(r3), [r3, r4])
+        self.assertEqual(target_regimes(r4), [r4])
 
     def test_all_expressions(self):
         a = Dynamics(
@@ -593,46 +593,46 @@ class TestOn(unittest.TestCase):
 
         # Test that we are correctly inferring OnEvents and OnConditions.
 
-        self.assertEquals(type(On('V>0')), OnCondition)
-        self.assertEquals(type(On('V<0')), OnCondition)
-        self.assertEquals(type(On('(V<0) & (K>0)')), OnCondition)
-        self.assertEquals(type(On('V==0')), OnCondition)
+        self.assertEqual(type(On('V>0')), OnCondition)
+        self.assertEqual(type(On('V<0')), OnCondition)
+        self.assertEqual(type(On('(V<0) & (K>0)')), OnCondition)
+        self.assertEqual(type(On('V==0')), OnCondition)
 
-        self.assertEquals(
+        self.assertEqual(
             type(On("q > 1 / (( 1 + mg_conc * eta *  exp ( -1 * gamma*V)))")),
             OnCondition)
 
-        self.assertEquals(type(On('SP0')), OnEvent)
-        self.assertEquals(type(On('SP1')), OnEvent)
+        self.assertEqual(type(On('SP0')), OnEvent)
+        self.assertEqual(type(On('SP1')), OnEvent)
 
         # Check we can use 'do' with single and multiple values
         tr = On('V>0')
-        self.assertEquals(len(list(tr.output_events)), 0)
-        self.assertEquals(len(list(tr.state_assignments)), 0)
+        self.assertEqual(len(list(tr.output_events)), 0)
+        self.assertEqual(len(list(tr.state_assignments)), 0)
         tr = On('SP0')
-        self.assertEquals(len(list(tr.output_events)), 0)
-        self.assertEquals(len(list(tr.state_assignments)), 0)
+        self.assertEqual(len(list(tr.output_events)), 0)
+        self.assertEqual(len(list(tr.state_assignments)), 0)
 
         tr = On('V>0', do=OutputEvent('spike'))
-        self.assertEquals(len(list(tr.output_events)), 1)
-        self.assertEquals(len(list(tr.state_assignments)), 0)
+        self.assertEqual(len(list(tr.output_events)), 1)
+        self.assertEqual(len(list(tr.state_assignments)), 0)
         tr = On('SP0', do=OutputEvent('spike'))
-        self.assertEquals(len(list(tr.output_events)), 1)
-        self.assertEquals(len(list(tr.state_assignments)), 0)
+        self.assertEqual(len(list(tr.output_events)), 1)
+        self.assertEqual(len(list(tr.state_assignments)), 0)
 
         tr = On('V>0', do=[OutputEvent('spike')])
-        self.assertEquals(len(list(tr.output_events)), 1)
-        self.assertEquals(len(list(tr.state_assignments)), 0)
+        self.assertEqual(len(list(tr.output_events)), 1)
+        self.assertEqual(len(list(tr.state_assignments)), 0)
         tr = On('SP0', do=[OutputEvent('spike')])
-        self.assertEquals(len(list(tr.output_events)), 1)
-        self.assertEquals(len(list(tr.state_assignments)), 0)
+        self.assertEqual(len(list(tr.output_events)), 1)
+        self.assertEqual(len(list(tr.state_assignments)), 0)
 
         tr = On('V>0', do=['y=2', OutputEvent('spike'), 'x=1'])
-        self.assertEquals(len(list(tr.output_events)), 1)
-        self.assertEquals(len(list(tr.state_assignments)), 2)
+        self.assertEqual(len(list(tr.output_events)), 1)
+        self.assertEqual(len(list(tr.state_assignments)), 2)
         tr = On('SP0', do=['y=2', OutputEvent('spike'), 'x=1'])
-        self.assertEquals(len(list(tr.output_events)), 1)
-        self.assertEquals(len(list(tr.state_assignments)), 2)
+        self.assertEqual(len(list(tr.output_events)), 1)
+        self.assertEqual(len(list(tr.state_assignments)), 2)
 
 
 class OnCondition_test(unittest.TestCase):
@@ -643,7 +643,7 @@ class OnCondition_test(unittest.TestCase):
                             'V < (V+10',
                             'V (< V+10)',
                             'V (< V+10)',
-                            '1 / ( 1 + mg_conc * eta *  exp (( -1 * gamma*V))'
+                            '1 / ( 1 + mg_conc * eta *  exp(-1 * gamma*V))'
                             '1..0'
                             '..0']
         for tr in invalid_triggers:
@@ -710,7 +710,7 @@ class OnCondition_test(unittest.TestCase):
 
             python_func = c.trigger.rhs_as_python_func
             param_dict = dict([(v, namespace[v]) for v in expt_vars])
-            self.assertEquals(return_values[i], python_func(**param_dict))
+            self.assertEqual(return_values[i], python_func(**param_dict))
 
     def test_trigger_crossing_time_expr(self):
         self.assertEqual(Trigger('t > t_next').crossing_time_expr.rhs,
@@ -741,8 +741,8 @@ class OnEvent_test(unittest.TestCase):
         self.assertRaises(NineMLUsageError, OnEvent, 'MyEvent1 2')
         self.assertRaises(NineMLUsageError, OnEvent, 'MyEvent1* ')
 
-        self.assertEquals(OnEvent(' MyEvent1 ').src_port_name, 'MyEvent1')
-        self.assertEquals(OnEvent(' MyEvent2').src_port_name, 'MyEvent2')
+        self.assertEqual(OnEvent(' MyEvent1 ').src_port_name, 'MyEvent1')
+        self.assertEqual(OnEvent(' MyEvent2').src_port_name, 'MyEvent2')
 
 
 class Regime_test(unittest.TestCase):
@@ -762,11 +762,11 @@ class Regime_test(unittest.TestCase):
         # The source regime for this transition will be set as this regime.
 
         r = Regime(name='R1')
-        self.assertEquals(unique_by_id(r.on_conditions), [])
+        self.assertEqual(unique_by_id(r.on_conditions), [])
         r.add(OnCondition('sp1>0'))
-        self.assertEquals(len(unique_by_id(r.on_conditions)), 1)
-        self.assertEquals(len(unique_by_id(r.on_events)), 0)
-        self.assertEquals(len(unique_by_id(r.transitions)), 1)
+        self.assertEqual(len(unique_by_id(r.on_conditions)), 1)
+        self.assertEqual(len(unique_by_id(r.on_events)), 0)
+        self.assertEqual(len(unique_by_id(r.transitions)), 1)
 
     def test_add_on_event(self):
         # Signature: name(self, on_event)
@@ -779,11 +779,11 @@ class Regime_test(unittest.TestCase):
         # The source regime for this transition will be set as this regime.
         # from nineml.abstraction.component.dynamics import Regime
         r = Regime(name='R1')
-        self.assertEquals(unique_by_id(r.on_events), [])
+        self.assertEqual(unique_by_id(r.on_events), [])
         r.add(OnEvent('sp'))
-        self.assertEquals(len(unique_by_id(r.on_events)), 1)
-        self.assertEquals(len(unique_by_id(r.on_conditions)), 0)
-        self.assertEquals(len(unique_by_id(r.transitions)), 1)
+        self.assertEqual(len(unique_by_id(r.on_events)), 1)
+        self.assertEqual(len(unique_by_id(r.on_conditions)), 0)
+        self.assertEqual(len(unique_by_id(r.transitions)), 1)
 
     def test_get_next_name(self):
         # Signature: name(cls)
@@ -817,7 +817,7 @@ class Regime_test(unittest.TestCase):
                    'dX2/dt=0',
                    name='r1')
 
-        self.assertEquals(
+        self.assertEqual(
             set([td.variable for td in r.time_derivatives]),
             set(['X1', 'X2']))
 
@@ -864,12 +864,12 @@ class Query_test(unittest.TestCase):
                 ]
             ),
         )
-        self.assertEquals(len(list(c.event_receive_ports)), 1)
-        self.assertEquals((list(list(c.event_receive_ports))[0]).name,
+        self.assertEqual(len(list(c.event_receive_ports)), 1)
+        self.assertEqual((list(list(c.event_receive_ports))[0]).name,
                           'in_ev1')
 
-        self.assertEquals(len(list(c.event_send_ports)), 2)
-        self.assertEquals(set(c.event_send_port_names),
+        self.assertEqual(len(list(c.event_send_ports)), 2)
+        self.assertEqual(set(c.event_send_port_names),
                           set(['ev_port1', 'ev_port2']))
 
         # Check inference of output event ports:
@@ -887,12 +887,12 @@ class Query_test(unittest.TestCase):
                            On('in_ev2', do=OutputEvent('ev_port3'))])
             ]
         )
-        self.assertEquals(len(list(c.event_receive_ports)), 2)
-        self.assertEquals(set(c.event_receive_port_names),
+        self.assertEqual(len(list(c.event_receive_ports)), 2)
+        self.assertEqual(set(c.event_receive_port_names),
                           set(['in_ev1', 'in_ev2']))
 
-        self.assertEquals(len(list(c.event_send_ports)), 3)
-        self.assertEquals(set(c.event_send_port_names),
+        self.assertEqual(len(list(c.event_send_ports)), 3)
+        self.assertEqual(set(c.event_send_port_names),
                            set(['ev_port1', 'ev_port2', 'ev_port3']))
 
         # Check inference of output event ports:
@@ -913,12 +913,12 @@ class Query_test(unittest.TestCase):
                               to='r1')])
             ]
         )
-        self.assertEquals(len(list(c.event_receive_ports)), 3)
-        self.assertEquals(set(c.event_receive_port_names),
+        self.assertEqual(len(list(c.event_receive_ports)), 3)
+        self.assertEqual(set(c.event_receive_port_names),
                           set(['spikeinput1', 'spikeinput2', 'spikeinput3']))
 
-        self.assertEquals(len(list(c.event_send_ports)), 3)
-        self.assertEquals(set(c.event_send_port_names),
+        self.assertEqual(len(list(c.event_send_ports)), 3)
+        self.assertEqual(set(c.event_send_port_names),
                           set(['ev_port1', 'ev_port2', 'ev_port3']))
 
     def test_ports(self):
@@ -951,8 +951,8 @@ class Query_test(unittest.TestCase):
         ports = list(list(c.ports))
         port_names = [p.name for p in ports]
 
-        self.assertEquals(len(port_names), 8)
-        self.assertEquals(set(port_names),
+        self.assertEqual(len(port_names), 8)
+        self.assertEqual(set(port_names),
                           set(['A1', 'B', 'C', 'spikeinput1', 'spikeinput2',
                                'spikeinput3', 'ev_port2', 'ev_port3'])
                           )

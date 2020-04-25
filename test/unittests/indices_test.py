@@ -73,7 +73,7 @@ class TestPreserveIndices(unittest.TestCase):
         for r, tds in self.time_derivatives.items():
             regime = dyn.regime(r)
             for i, td in enumerate(tds):
-                self.assertEquals(
+                self.assertEqual(
                     regime.index_of(regime.time_derivative(td)), i)
         for i, a in enumerate(self.aliases):
             self.assertEqual(dyn.index_of(dyn.alias(a)), i)
