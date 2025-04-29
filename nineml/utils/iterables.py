@@ -9,6 +9,7 @@ from .validation import assert_no_duplicates
 from ..exceptions import NineMLUsageError
 from nineml.base import ContainerObject
 from logging import getLogger
+from collections import abc
 
 
 logger = getLogger('NineML')
@@ -281,7 +282,7 @@ def ensure_iterable(expected_list):
                         .format(expected_list))
     elif isinstance(expected_list, (basestring, ContainerObject)):
         lst = [expected_list]
-    elif isinstance(expected_list, collections.Iterable):  # @UndefinedVariable
+    elif isinstance(expected_list, abc.Iterable):  # @UndefinedVariable
         lst = list(expected_list)
     else:
         lst = [expected_list]

@@ -513,8 +513,12 @@ class RandomDistributionValue(BaseValue):
 
     @property
     def key(self):
-        # FIXME: This should include a hash of the properties
-        return self._distribution.name
+        # Create a hash of the distribution properties
+        props = [(name, str(self._distribution.property(name).value))
+                for name in self._distribution.property_names]
+        props_str = str(sorted(props))
+        props_hash = hash(props_str)
+        return f"{self._distribution.name}_{props_hash}"
 
     def is_random(self):
         return True

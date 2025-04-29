@@ -258,7 +258,7 @@ class DimensionalityComponentValidator(BaseVisitorWithContext):
             base_dims = self._flatten_dims(base, element)
             if base_dims != 1:
                 if not isinstance(exponent, (sympy.Integer, int,
-                                             sympy.numbers.NegativeOne)):
+                                             sympy.core.numbers.NegativeOne)):
                     raise NineMLDimensionError(self._construct_error_message(
                         "Integer exponents are required for non-dimensionless "
                         "bases, which was not the case in", exp_dims, expr,
@@ -306,6 +306,11 @@ class DimensionalityComponentValidator(BaseVisitorWithContext):
         elif isinstance(element, BaseNineMLObject):
             assert False, ("{} was not added to pre-determined dimensions"
                            .format(element))
+        elif (isinstance(expr, (sympy.core.numbers.One,
+                             sympy.core.numbers.NegativeOne))):
+            return 1
+        elif isinstance(expr, sympy.core.numbers.Integer):
+            return 1
         else:
             raise NotImplementedError(
                 "Unrecognised type {} of expression '{}'"
