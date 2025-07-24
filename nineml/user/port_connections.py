@@ -314,7 +314,7 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
         node.attr('receive_port', self.receive_port_name, **options)
 
     @classmethod
-    def unserialize_node(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):
         return cls(send_port_name=node.attr('send_port', **options),
                    receive_port_name=node.attr('receive_port', **options),
                    sender_role=node.attr('sender_role', default=None,
@@ -332,22 +332,30 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
 
     @classmethod
     def from_tuple(cls, tple, container):
-        # FIXME: Needs comments to explain what is going on and better
-        #        exception messages
+        #Validate input format early
+        if not isinstance(tple, tuple):
+            raise TypeError(f"Expected a tuple, got {type(tple).__name__}")
+        if len(tple) != 4:
+            raise ValueError(f"Expected a 4-element tuple: (sender, send_port, receiver, receive_port). Got {len(tple)} elements.")
+
         sender, send_port, receiver, receive_port = tple
         init_kwargs = {}
+
+        #Try to get sender's component classes via role
         try:
             sender_dynamicss = getattr(container, sender).component_classes
             init_kwargs['sender_role'] = sender
         except AttributeError:
             try:
+                #If role-based access fails, try name-based lookup
                 sender_dynamicss = [container[sender].component_class]
                 init_kwargs['sender_name'] = sender
             except (TypeError, KeyError) as e:
                 raise NineMLUsageError(
-                    "Did not find sender {} '{}' in '{}' container"
-                    .format('name' if isinstance(e, KeyError) else 'role',
-                            receiver, container.name))
+                    f"Could not find sender by {'name' if isinstance(e, KeyError) else 'role'}: '{sender}' in container '{container.name}'"
+                )
+
+        #Try to get receiver's component classes via role
         try:
             getattr(container, receiver).component_classes
             init_kwargs['receiver_role'] = receiver
@@ -357,9 +365,10 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
                 init_kwargs['receiver_name'] = receiver
             except (TypeError, KeyError) as e:
                 raise NineMLUsageError(
-                    "Did not find receiver {} '{}' in '{}' container"
-                    .format('name' if isinstance(e, KeyError) else 'role',
-                            receiver, container.name))
+                    f"Could not find receiver by {'name' if isinstance(e, KeyError) else 'role'}: '{receiver}' in container '{container.name}'"
+                )
+
+        #Check the type of the send port across all sender components
         port_type = None
         for dyn in sender_dynamicss:
             pt = dyn.port(send_port).nineml_type
@@ -367,21 +376,23 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
                 port_type = pt
             elif port_type != pt:
                 raise NineMLUsageError(
-                    "Mismatching port types for '{}' port in populations in "
-                    "Selection '{}'".format(send_port, container.name))
+                    f"Mismatched port types for send port '{send_port}' in selection '{container.name}'"
+                )
+
         if port_type in ('AnalogSendPort', 'AnalogSendPortExposure'):
             port_connection = AnalogPortConnection(
                 receive_port_name=receive_port,
                 send_port_name=send_port, **init_kwargs)
         elif port_type in ('EventSendPort', 'EventSendPortExposure'):
             port_connection = EventPortConnection(
-                receive_port_name=receive_port, send_port_name=send_port,
-                **init_kwargs)
+                receive_port_name=receive_port,
+                send_port_name=send_port, **init_kwargs)
         else:
-            assert False, "'{}' should be a send port not '{}'".format(
-                send_port, port_type)
-        return port_connection
+            raise NineMLUsageError(
+                f"'{send_port}' is not a valid send port (found type '{port_type}')"
+            )
 
+        return port_connection
 
 class AnalogPortConnection(BasePortConnection):
 
