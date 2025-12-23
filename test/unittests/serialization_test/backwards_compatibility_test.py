@@ -38,13 +38,13 @@ class TestBackwardsCompatibility(unittest.TestCase):
             v1_xml = self._get_xml_element(full_v1_xml, name)
             v2_xml = self._get_xml_element(full_v2_xml, name)
             # Test the version 1 converted to version 2
-            self.assert_(
+            self.assertTrue(
                 xml_equal(v1_to_v2_xml, v2_xml),
                 "v2 produced from v1 doesn't match loaded:\n{}\n\nand"
                 "\n\n{}".format(xml_to_str(v1_to_v2_xml, pp=True),
                                 xml_to_str(v2_xml, pp=True)))
             # Test the version 2 converted to version 1
-            self.assert_(
+            self.assertTrue(
                 xml_equal(v2_to_v1_xml, v1_xml),
                 "v1 produced from v2 doesn't match loaded:\n{}\n\nand\n\n"
                 "{}".format(xml_to_str(v2_to_v1_xml, pp=True),
