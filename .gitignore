@@ -30,3 +30,4 @@ __pycache__
 /build/
 .pytest_cache
 .history
+venv/

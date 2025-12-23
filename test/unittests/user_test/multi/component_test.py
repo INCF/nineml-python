@@ -264,7 +264,7 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
             name="TestMultiDyn",
             sub_components={'cell': test_dyn})
 
-        self.assert_(Constant('ADP1__cell', 0.0, un.per_time.origin.units)
+        self.assertTrue(Constant('ADP1__cell', 0.0, un.per_time.origin.units)
                      in test_multi.constants,
                      "Zero-valued constant wasn't inserted for unused reduce "
                      "port")
