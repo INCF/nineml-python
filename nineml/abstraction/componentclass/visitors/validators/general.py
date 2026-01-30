@@ -16,6 +16,9 @@ from nineml.base import SendPortBase
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from nineml.visitors import BaseVisitor, BaseVisitorWithContext
 from functools import reduce
+import warnings
+from nineml.abstraction.componentclass.ports import EventSendPort
+
 
 
 class AliasesAreNotRecursiveComponentValidator(BaseVisitor):
@@ -371,3 +374,31 @@ class DimensionalityComponentValidator(BaseVisitorWithContext):
 
     def default_action(self, obj, nineml_cls, **kwargs):
         pass
+
+ class EventSendPortHasOutputEventComponentValidator(BaseVisitorWithContext):
+    """
+    Warn if an EventSendPort has no matching OutputEvent
+    """
+
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
+        BaseVisitorWithContext.__init__(self)
+        self.component_class = component_class
+        self.visit(component_class)
+
+    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
+        # Check for matching OutputEvent by name
+        matches = [
+            ev for ev in self.component_class.output_events
+            if ev.name == port.name
+        ]
+
+        if not matches:
+            warnings.warn(
+                "EventSendPort '{}' has no matching OutputEvent"
+                .format(port.name),
+                UserWarning
+            )
+
+    def default_action(self, obj, nineml_cls, **kwargs):
+        pass
+   
