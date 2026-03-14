@@ -12,6 +12,29 @@ E = ElementMaker(namespace=NINEML_NS,
                  nsmap={None: NINEML_NS})
 
 
+class TestArrayValueKey(unittest.TestCase):
+
+    def test_key_unique_for_arrays_sharing_first_ten_values(self):
+        # Two arrays with identical first 10 values but different lengths
+        # must produce different keys.
+        shared = list(range(10))
+        a = ArrayValue(shared + [99.0])
+        b = ArrayValue(shared + [0.0])
+        self.assertNotEqual(a.key, b.key)
+
+    def test_key_stable_for_identical_arrays(self):
+        values = list(range(15))
+        a = ArrayValue(values)
+        b = ArrayValue(values)
+        self.assertEqual(a.key, b.key)
+
+    def test_key_unique_short_vs_long_array(self):
+        # A short array must not collide with a longer one sharing those values.
+        a = ArrayValue([1.0, 2.0, 3.0])
+        b = ArrayValue([1.0, 2.0, 3.0, 4.0])
+        self.assertNotEqual(a.key, b.key)
+
+
 class TestArrayValueExceptions(unittest.TestCase):
 
     def test___init___ninemlvalueerror(self):
