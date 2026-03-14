@@ -269,8 +269,9 @@ class ArrayValue(BaseValue):
 
     @property
     def key(self):
-        # TODO: Should put a hash on the end of this to make it unique
-        return str('_'.join(str(v) for v in self._values[:10]))
+        prefix = '_'.join(str(v) for v in self._values[:10])
+        values_str = str(list(self._values))
+        return '{}_{}'.format(prefix, hash(values_str))
 
     def is_array(self):
         return True
