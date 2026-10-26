@@ -40,7 +40,10 @@ class JSONUnserializer(DictUnserializer):
     """
 
     def from_file(self, file, encoding=None, **options):  # @ReservedAssignment @UnusedVariable @IgnorePep8
-        return self.from_elem(json.load(file, encoding=encoding), **options)
+        # 'encoding' was removed from json.load in Python 3.9
+        kwargs = {} if encoding is None else {'encoding': encoding}
+        return self.from_elem(json.load(file, **kwargs), **options)
 
     def from_str(self, string, encoding=None, **options):  # @UnusedVariable
-        return self.from_elem(json.loads(string, encoding=encoding), **options)
+        kwargs = {} if encoding is None else {'encoding': encoding}
+        return self.from_elem(json.loads(string, **kwargs), **options)
