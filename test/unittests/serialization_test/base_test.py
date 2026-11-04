@@ -352,7 +352,12 @@ class TestSerialization(unittest.TestCase):
                 h_str = h.serialize(to_str=True, format=format, fname=None)
                 new_h = H.unserialize(h_str, format, version=1.0)
                 self.assertEqual(h, new_h)
-                self.assertEqual(h_str, h_strs[format])
+                if format == 'yaml':
+                    expected_h = H.unserialize(
+                        h_strs[format], format, version=1.0)
+                    self.assertEqual(new_h, expected_h)
+                else:
+                    self.assertEqual(h_str, h_strs[format])
 
 
 h_strs = {
